@@ -4,7 +4,7 @@ const readline = require("readline");
 const fs = require('fs');
 
 const BACKEND_REPO_NAME = 'https://github.com/fbslo/whe-backend'
-const FRONTEND_REPO_NAME = ''
+const FRONTEND_REPO_NAME = 'https://github.com/fbslo/whe-frontend'
 
 main()
 

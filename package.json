@@ -1,0 +1,14 @@
+{
+  "name": "whe-in-a-box",
+  "version": "1.0.0",
+  "description": "Wrapped Hive Engine Tokens in a Box",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "fbslo",
+  "license": "ISC",
+  "dependencies": {
+    "readline": "^1.3.0"
+  }
+}

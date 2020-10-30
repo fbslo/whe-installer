@@ -6,26 +6,47 @@ const fs = require('fs');
 const BACKEND_REPO_NAME = 'https://github.com/fbslo/whe-backend'
 const FRONTEND_REPO_NAME = 'https://github.com/fbslo/whe-frontend'
 
+const installDependencies = require("./installDependencies.js")
+const deployToken = require("./deployToken.js")
+
 main()
 
 async function main(){
   console.log("-".repeat(process.stdout.columns))
   console.log(`Wrapped Hive Engine Tokens\nInstaller 1.0\nCopyright: @fbslo, 2020`)
   console.log("-".repeat(process.stdout.columns))
-  if (process.argv[2] == 'install') install()
-  if (process.argv[2] == 'start') start()
-  if (process.argv[2] == 'logs') logs()
+  askDisclaimer()
+    .then((result) => {
+      if (process.argv[2] == 'install') install()
+      if (process.argv[2] == 'start') start()
+      if (process.argv[2] == 'logs') logs()
+      if (process.argv[2] == 'deploy_token') deployToken.deploy_token()
+      else console.log(`Please provide valid command [install/deploy_token/start/logs]`); process.exit(0);
+    })
+}
+
+function askDisclaimer(){
+  return new Promise((resolve, reject) => {
+    let rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    rl.question("Do you accept [Y/N]? ", function(disclaimer) {
+      if (disclaimer.toLowerCase() != 'y') process.exit(0);
+      resolve();
+    })
+  })
 }
 
 function install(){
   storeInstallInfo(0)
   if (os.type() != 'Linux') console.log(`[!] Your operating system is ${os.type()}. It is recommended to use Ubuntu 18.04.`)
-  isNodeInstalled()
+  installDependencies.isNodeInstalled()
     .then((result) => {
-      if (result.includes("is not recognized") || result.includes("not found") || result.includes("not installed")) return installNode()
+      if (result.includes("is not recognized") || result.includes("not found") || result.includes("not installed")) return installDependencies.installNode()
     })
     .then(async (result) => {
-      let node = await isNodeInstalled()
+      let node = await installDependencies.isNodeInstalled()
       if (node.includes("is not recognized") || node.includes("not found") || node.includes("not installed")) console.log(`Something went wrong installing NodeJS.`)
       else askAboutInstallation()
     })
@@ -36,7 +57,7 @@ function askAboutInstallation(){
       input: process.stdin,
       output: process.stdout
   });
-  console.log(`Please selet more details about intallation.`)
+  console.log(`Please select more details about intallation.`)
   console.log(`[1] - Backend\n[2] - Frontend\n[3] - Frontend & Backend`)
   rl.question("What would you like to install? ", function(name) {
       switch (name){
@@ -153,32 +174,4 @@ function logs(){
       if (e.message == 'Unexpected end of JSON input') console.log(`Please install app first: node index.js install`)
     }
   });
-}
-
-function isNodeInstalled(){
-  return new Promise((resolve, reject) => {
-    exec("node -v", (error, stdout, stderr) => {
-        if (error) {
-            resolve(error);
-        }
-        if (stderr) {
-            resolve(stderr);
-        }
-        resolve(stdout)
-    });
-  })
-}
-
-function installNode(){
-  return new Promise((resolve, reject) => {
-    exec(`sudo apt update && sudo apt install nodejs && sudo apt install npm && sudo apt install git && npm install pm2@latest -g`, (error, stdout, stderr) => {
-        if (error) {
-            resolve(error);
-        }
-        if (stderr) {
-            resolve(stderr);
-        }
-        resolve(stdout)
-    });
-  })
 }

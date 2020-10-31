@@ -9,6 +9,11 @@ const FRONTEND_REPO_NAME = 'https://github.com/fbslo/whe-frontend'
 const installDependencies = require("./installDependencies.js")
 const deployToken = require("./deployToken.js")
 
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
 main()
 
 async function main(){
@@ -17,33 +22,32 @@ async function main(){
   console.log("-".repeat(process.stdout.columns))
   askDisclaimer()
     .then((result) => {
-      if (process.argv[2] == 'install') install()
-      if (process.argv[2] == 'start') start()
-      if (process.argv[2] == 'logs') logs()
-      if (process.argv[2] == 'deploy_token') deployToken.deploy_token()
-      else console.log(`Please provide valid command [install/deploy_token/start/logs]`); process.exit(0);
+      console.log("-".repeat(process.stdout.columns))
+      if (process.argv[2] == 'install') return install()
+      else if (process.argv[2] == 'start') return start()
+      else if (process.argv[2] == 'logs') return logs()
+      else if (process.argv[2] == 'deploy_token') return deployToken.deploy_token()
+      else console.log(`Please provide a valid command [install/deploy_token/start/logs]`); process.exit(0);
     })
 }
 
 function askDisclaimer(){
   return new Promise((resolve, reject) => {
-    let rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
+    console.log('\x1b[36m%s\x1b[0m', 'THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.')
     rl.question("Do you accept [Y/N]? ", function(disclaimer) {
       if (disclaimer.toLowerCase() != 'y') process.exit(0);
-      resolve();
+      else resolve();
     })
   })
 }
 
-function install(){
-  storeInstallInfo(0)
+async function install(){
+  await storeInstallInfo(0)
   if (os.type() != 'Linux') console.log(`[!] Your operating system is ${os.type()}. It is recommended to use Ubuntu 18.04.`)
   installDependencies.isNodeInstalled()
     .then((result) => {
       if (result.includes("is not recognized") || result.includes("not found") || result.includes("not installed")) return installDependencies.installNode()
+      else askAboutInstallation()
     })
     .then(async (result) => {
       let node = await installDependencies.isNodeInstalled()
@@ -53,10 +57,6 @@ function install(){
 }
 
 function askAboutInstallation(){
-  let rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-  });
   console.log(`Please select more details about intallation.`)
   console.log(`[1] - Backend\n[2] - Frontend\n[3] - Frontend & Backend`)
   rl.question("What would you like to install? ", function(name) {
@@ -77,13 +77,7 @@ function askAboutInstallation(){
           console.log(`Please select valid option!`)
           askAboutInstallation()
           break;
-      }
-  });
-
-  rl.on("close", function() {
-      console.log("\nBYE BYE !!!");
-      process.exit(0);
-  });
+      }  });
 }
 
 function installBackend(){

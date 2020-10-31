@@ -3,31 +3,19 @@ const os = require('os');
 const readline = require("readline");
 const fs = require('fs');
 const solc = require('solc');
+const readFilePromise = require('fs-readfile-promise');
+require('dotenv').config()
 
 function deploy_token(){
-  let rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-  });
-  console.log(`You are about to deploy token on Ethereum mainnet. Be careful, it will cost you transaction fees.`)
-  let selection = {}
-  rl.question("Enter your token name: ", function(name) {
-    selection["name"] = name
-    rl.question("Enter your token symbol: ", function(symbol) {
-      selection["symbol"] = symbol
-      rl.question("Enter your token decimal places (0-18): ", function(decimals) {
-        selection["decimals"] = Number(decimals)
-        console.log(`Your choices: ${JSON.stringify(selection)}`)
-        rl.question("Confirm Y/N: ", function(confirm) {
-          if (confirm.toLowerCase() == "y") verifyChoices(selection)
-          else console.log(`Abort!`); process.exit(0);
-        })
-      })
-    })
-  });
+  let selection = {
+    name: process.env.TOKEN_NAME,
+    symbol: process.env.TOKEN_SYMBOL,
+    decimals: process.env.TOKEN_PRECISION
+  }
+  verifyConfig(selection)
 }
 
-function verifyChoices(selection){
+function verifyConfig(selection){
   if (typeof selection.decimals != 'number' ||
       selection.decimals > 18 ||
       selection.decimals < 0
@@ -49,30 +37,21 @@ function verifyChoices(selection){
 
 function deploy_token_to_network(selection){
   let tokenConfig = `\ncontract wToken is WrappedToken, ERC20Detailed("${selection.name}", "${selection.symbol}", ${selection.decimals}) {}`
-  exec("git clone https://github.com/fbslo/wToken-contract && cd wToken-contract && npm install", (error, stdout, stderr) => {
-      if (error) {
-          console.log(error);
-      }
-      if (stderr) {
-          console.log(stderr);
-      }
-      console.log(stdout)
-      //editTokenConfig(tokenConfig)
-  });
+  editTokenConfig(tokenConfig)
 }
 
-function editTokenConfig(config){
-  let tokenFile = `pragma solidity ^0.5.1;\n\nimport "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";\nimport "./WrappedToken.sol";\n`
-  //emty first to prepare for fresh install, we are in wToken-contract directory
-  fs.writeFileSync('contract/wToken.sol', '', function (err) {
-    if (err) console.log("err", err);
-  });
-  //write new code
-  fs.writeFileSync('contract/wToken.sol', tokenFile+config, function (err) {
-    if (err) console.log("err", err);
+async function editTokenConfig(config){
+  try {
+    //emty first to prepare for fresh install, we are in wToken-contract directory
+    // let buffer = await readFilePromise('contracts/wToken.sol')
+    // console.log(buffer.toString())
+    // //write new code
+    // let writeFile = await fs.writeFileSync('contracts/wToken.sol', result+config)
     console.log(`Token details successfully written...`)
     flatten()
-  });
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 function flatten(){
@@ -106,8 +85,5 @@ function comile(){
   const compiledContracts = JSON.parse(solc.compile(JSON.stringify(input))).contracts;
   console.log(compiledContracts)
 }
-
-deploy_token()
-
 
 module.exports.deploy_token = deploy_token

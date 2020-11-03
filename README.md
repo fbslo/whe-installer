@@ -1,3 +1,5 @@
+<h1>[DEPRECATED]</h1>
+
 This is installer for both frontend and backend of Wrapped Hive Engine Tokens Oracle.
 
 How to run commands?
